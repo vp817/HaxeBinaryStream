@@ -8,6 +8,7 @@ import haxe.io.BytesBuffer;
 import haxe.io.Bytes;
 
 var EndOfStreamReached:Error = Error.Overflow;
+var VarintTooBig:Error = Error.Overflow;
 
 class BinaryStream {
 	public var buffer:BytesBuffer;
@@ -107,6 +108,24 @@ class BinaryStream {
 		this.writeInt32(val.low);
 	}
 
+	public function writeVarInt(value:Int):Void {
+		value &= 0xffffffff;
+
+		for (i in 0...5) {
+			var toWrite = value & 0x7f;
+			value >>>= 7;
+			if (value == 0x00) {
+				this.writeInt8(toWrite, false);
+			} else {
+				this.writeInt8(toWrite | 0x80, false);
+			}
+		}
+	}
+
+	public function writeZigZag32(value:Int):Void {
+		this.writeVarInt((value << 1) ^ (value >> 32 - 1));
+	}
+
 	public function readInt8(signed:Bool):Int {
 		return this.readBit(1) & (signed == true ? 0x7f : 0xff);
 	}
@@ -160,5 +179,26 @@ class BinaryStream {
 	public function readDouble():Float {
 		var value:Int64 = Int64.make(this.readInt32(), this.readInt32());
 		return FPHelper.i64ToDouble(value.low, value.high);
+	}
+
+	public function readVarInt():Int {
+		var value:Int = 0;
+		var i:Int = 0;
+		while (i < 35) {
+			var toRead:Int = this.readInt8(false);
+			value |= (toRead & 0x7f) << i;
+			if ((toRead & 0x80) == 0x00) {
+				return value;
+			}
+
+			i += 7;
+		} // 0 7 14 21 28
+
+		throw VarintTooBig;
+	}
+
+	public function readZigZag32():Int {
+		var value:Int = this.readVarInt();
+		return (value >> 1) ^ (value >> 32 - 1);
 	}
 }
