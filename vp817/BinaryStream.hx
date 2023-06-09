@@ -12,14 +12,16 @@ var EndOfStreamReached:Error = Error.Overflow;
 class BinaryStream {
 	public var buffer:BytesBuffer;
 	public var readingPos:Int;
+	public var isBigEndian:Bool;
 
-	public function new(buffer:BytesBuffer, readingPos:Int):Void {
+	public function new(buffer:BytesBuffer, readingPos:Int, bigEndain:Bool):Void {
 		this.buffer = buffer;
 		this.readingPos = readingPos;
+		this.isBigEndian = bigEndain;
 	}
 
-	static public function allocate():BinaryStream {
-		return new BinaryStream(new BytesBuffer(), 0);
+	static public function allocate(bigEndain:Bool):BinaryStream {
+		return new BinaryStream(new BytesBuffer(), 0, bigEndain);
 	}
 
 	public function getBytes():Bytes {
@@ -44,221 +46,108 @@ class BinaryStream {
 	}
 
 	public function rewind():Void {
-		this.offset = 0;
+		this.readingPos = 0;
 	}
 
-	public function writeUnsignedByte(value:UInt):Void {
-		var temp:Bytes = Bytes.alloc(1);
-		temp.set(0, value);
-		this.write(temp);
+	public function swapEndainness():Void {
+		this.isBigEndian = this.isBigEndian == true ? false : true;
 	}
 
-	public function writeByte(value:Int):Void {
+	public function writeInt8(value:Int, signed:Bool):Void {
 		var temp:Bytes = Bytes.alloc(1);
-		temp.set(0, value & 0x7f);
+		temp.set(0, value & (signed == true ? 0x7f : 0xff));
 		this.write(temp);
 	}
 
 	public function writeBool(value:Bool):Void {
-		this.writeUnsignedByte(value == true ? 1 : 0);
+		this.writeInt8(value == true ? 1 : 0, false);
 	}
 
-	public function writeUnsignedShortBe(value:UInt):Void {
+	public function writeInt16(value:Int, signed:Bool):Void {
 		var temp:Bytes = Bytes.alloc(2);
-		temp.set(0, (value & 0xffff) >> 8);
-		temp.set(1, value & 0xffff);
+		var v:Int = signed == true ? 0x7fff : 0xffff;
+		if (this.isBigEndian) {
+			temp.set(0, (value & v) >> 8);
+			temp.set(1, value & v);
+		} else {
+			temp.set(0, value & v);
+			temp.set(1, (value & v) >> 8);
+		}
 		this.write(temp);
 	}
 
-	public function writeShortBe(value:Int):Void {
-		var temp:Bytes = Bytes.alloc(2);
-		temp.set(0, (value & 0x7fff) >> 8);
-		temp.set(1, value & 0x7fff);
-		this.write(temp);
-	}
-
-	public function writeUnsignedShortLe(value:UInt):Void {
-		var temp:Bytes = Bytes.alloc(2);
-		temp.set(0, value & 0xffff);
-		temp.set(1, (value & 0xffff) >> 8);
-		this.write(temp);
-	}
-
-	public function writeShortLe(value:Int):Void {
-		var temp:Bytes = Bytes.alloc(2);
-		temp.set(0, value & 0x7fff);
-		temp.set(1, (value & 0x7fff) >> 8);
-		this.write(temp);
-	}
-
-	public function writeUnsignedLongBe32(value:Int32):Void {
+	public function writeInt32(value:Int32):Void {
 		var temp:Bytes = Bytes.alloc(4);
-		temp.set(0, value >> 24);
-		temp.set(1, value >> 16);
-		temp.set(2, value >> 8);
-		temp.set(3, value);
+		if (this.isBigEndian) {
+			temp.set(0, value >> 24);
+			temp.set(1, value >> 16);
+			temp.set(2, value >> 8);
+			temp.set(3, value);
+		} else {
+			temp.set(0, value);
+			temp.set(1, value >> 8);
+			temp.set(2, value >> 16);
+			temp.set(3, value >> 24);
+		}
 		this.write(temp);
 	}
 
-	public function writeUnsignedLongBe64(value:Int64) {
-		this.writeUnsignedLongBe32(value.high);
-		this.writeUnsignedLongBe32(value.low);
-	}
-
-	public function writeLongBe32(value:Int32):Void {
-		this.writeUnsignedLongBe32(value);
-	}
-
-	public function writeLongBe64(value:Int64):Void {
-		this.writeUnsignedLongBe64(value);
-	}
-
-	public function writeUnsignedLongLe32(value:Int32):Void {
-		var temp:Bytes = Bytes.alloc(4);
-		temp.set(0, value);
-		temp.set(1, value >> 8);
-		temp.set(2, value >> 16);
-		temp.set(3, value >> 24);
-		this.write(temp);
-	}
-
-	public function writeUnsignedLongLe64(value:Int64) {
-		this.writeUnsignedLongLe32(value.high);
-		this.writeUnsignedLongLe32(value.low);
-	}
-
-	public function writeLongLe32(value:Int32):Void {
-		this.writeUnsignedLongLe32(value);
-	}
-
-	public function writeLongLe64(value:Int64):Void {
-		this.writeUnsignedLongLe64(value);
-	}
-
-	public function writeUnsignedIntBe(value:Int32):Void {
-		this.writeUnsignedLongBe32(value & 0xffffffff);
-	}
-
-	public function writeIntBe(value:Int32):Void {
-		this.writeLongBe32(value & 0xffffffff);
-	}
-
-	public function writeUnsignedIntLe(value:Int32):Void {
-		this.writeUnsignedLongLe32(value & 0xffffffff);
-	}
-
-	public function writeIntLe(value:Int32):Void {
-		this.writeLongLe32(value & 0xffffffff);
+	public function writeInt64(value:Int64) {
+		this.writeInt32(value.high);
+		this.writeInt32(value.low);
 	}
 
 	public function writeFloat(value:Float) {
-		this.writeUnsignedIntBe(FPHelper.floatToI32(value));
+		this.writeInt32(FPHelper.floatToI32(value));
 	}
 
 	public function writeDouble(value:Float) {
 		var val: Int64 = FPHelper.doubleToI64(value);
-		this.writeUnsignedIntBe(val.high);
-		this.writeUnsignedIntBe(val.low);
+		this.writeInt32(val.high);
+		this.writeInt32(val.low);
 	}
 
-	public function readUnsignedByte():UInt {
-		return this.readBit(1);
-	}
-
-	public function readByte():Int {
-		return this.readBit(1) & 0x7f;
+	public function readInt8(signed:Bool):Int {
+		return this.readBit(1) & (signed == true ? 0x7f : 0xff);
 	}
 
 	public function readBool():Bool {
-		return this.readUnsignedByte() == 1 ? true : false;
+		return this.readInt8(false) == 1 ? true : false;
 	}
 
-	public function readUnsignedShortBe():UInt {
-		var value:UInt = 0;
-		value |= (this.readBit(1) & 0xffff) << 8;
-		value |= this.readBit(1) & 0xffff;
-		return value;
-	}
-
-	public function readShortBe():Int {
+	public function readInt16(signed:Bool):Int {
 		var value:Int = 0;
-		value |= (this.readBit(1) & 0x7fff) << 8;
-		value |= this.readBit(1) & 0x7fff;
+		var v:Int = signed == true ? 0x7fff : 0xffff;
+		if (this.isBigEndian) {
+			value |= (this.readBit(1) & v) << 8;
+			value |= this.readBit(1) & v;
+		} else {
+			value |= this.readBit(1) & v;
+			value |= (this.readBit(1) & v) << 8;
+		}
 		return value;
 	}
 
-	public function readUnsignedShortLe():UInt {
-		var value:UInt = 0;
-		value |= this.readBit(1) & 0xffff;
-		value |= (this.readBit(1) & 0xffff) << 8;
-		return value;
-	}
-
-	public function readShortLe():Int {
-		var value:Int = 0;
-		value |= this.readBit(1) & 0x7fff;
-		value |= (this.readBit(1) & 0x7fff) << 8;
-		return value;
-	}
-
-	public function readUnsignedLongBe32():Int32 {
+	public function readInt32():Int32 {
 		var value:Int32 = 0;
-		value |= this.readBit(1) << 24;
-		value |= this.readBit(1) << 16;
-		value |= this.readBit(1) << 8;
-		value |= this.readBit(1);
+		if (this.isBigEndian) {
+			value |= this.readBit(1) << 24;
+			value |= this.readBit(1) << 16;
+			value |= this.readBit(1) << 8;
+			value |= this.readBit(1);
+		} else {
+			value |= this.readBit(1);
+			value |= this.readBit(1) << 8;
+			value |= this.readBit(1) << 16;
+			value |= this.readBit(1) << 24;
+		}
 		return value;
 	}
 
-	public function readLongBe32():Int64 {
-		return this.readUnsignedLongBe32();
+	public function readInt64():Int64 {
+		return Int64.make(this.readInt32(), this.readInt32());
 	}
 
-	public function readUnsignedLongBe64():Int64 {
-		return Int64.make(this.readUnsignedLongBe32(), this.readUnsignedLongBe32());
-	}
-
-	public function readLongBe64():Int64 {
-		return this.readUnsignedLongBe64();
-	}
-
-	public function readUnsignedLongLe32():Int32 {
-		var value:Int32 = 0;
-		value |= this.readBit(1);
-		value |= this.readBit(1) << 8;
-		value |= this.readBit(1) << 16;
-		value |= this.readBit(1) << 24;
-		return value;
-	}
-
-	public function readLongLe32():Int64 {
-		return this.readUnsignedLongLe32();
-	}
-
-	public function readUnsignedLongLe64():Int64 {
-		return Int64.make(this.readUnsignedLongLe32(), this.readUnsignedLongLe32());
-	}
-
-	public function readLongLe64():Int64 {
-		return this.readUnsignedLongLe64();
-	}
-
-	public function readUnsignedIntBe():Int32 {
-		return this.readUnsignedLongBe32();
-	}
-
-	public function readIntBe():Int32 {
-		return this.readUnsignedIntBe();
-	}
-
-	public function readUnsignedIntLe():Int32 {
-		return this.readUnsignedLongLe32();
-	}
-
-	public function readIntLe():Int32 {
-		return this.readUnsignedIntLe();
-	}
-	
 	public function readFloat():Float {
 		var value:Int = 0;
 		value |= this.readBit(1) << 24;
@@ -269,7 +158,7 @@ class BinaryStream {
 	}
 
 	public function readDouble():Float {
-		var value:Int64 = Int64.make(this.readUnsignedIntBe(), this.readUnsignedIntBe());
+		var value:Int64 = Int64.make(this.readInt32(), this.readInt32());
 		return FPHelper.i64ToDouble(value.low, value.high);
 	}
 }
