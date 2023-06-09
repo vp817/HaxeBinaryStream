@@ -199,6 +199,6 @@ class BinaryStream {
 
 	public function readZigZag32():Int {
 		var value:Int = this.readVarInt();
-		return (value >> 1) ^ (value >> 32 - 1);
+		return (value >> 1) ^ (value << 32 - 1);
 	}
 }
