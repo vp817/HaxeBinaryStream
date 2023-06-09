@@ -49,7 +49,7 @@ class BinaryStream {
 
 	public function writeUnsignedByte(value:UInt):Void {
 		var temp:Bytes = Bytes.alloc(1);
-		temp.set(0, value & 0xff);
+		temp.set(0, value);
 		this.write(temp);
 	}
 
@@ -162,7 +162,7 @@ class BinaryStream {
 	}
 
 	public function readUnsignedByte():UInt {
-		return this.readBit(1) & 0xff;
+		return this.readBit(1);
 	}
 
 	public function readByte():Int {
