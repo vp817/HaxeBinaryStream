@@ -8,7 +8,7 @@ import haxe.io.BytesBuffer;
 import haxe.io.Bytes;
 
 var EndOfStreamReached:Error = Error.Overflow;
-var VarintTooBig:Error = Error.Overflow;
+var VarIntTooBig:Error = Error.Overflow;
 
 class BinaryStream {
 	public var buffer:BytesBuffer;
@@ -194,7 +194,7 @@ class BinaryStream {
 			i += 7;
 		} // 0 7 14 21 28
 
-		throw VarintTooBig;
+		throw VarIntTooBig;
 	}
 
 	public function readZigZag32():Int {
