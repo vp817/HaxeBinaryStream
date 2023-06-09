@@ -11,11 +11,11 @@ var EndOfStreamReached:Error = Error.Overflow;
 
 class BinaryStream {
 	public var buffer:BytesBuffer;
-	public var offset:Int;
+	public var readingPos:Int;
 
-	public function new(buffer:BytesBuffer, offset:Int):Void {
+	public function new(buffer:BytesBuffer, readingPos:Int):Void {
 		this.buffer = buffer;
-		this.offset = offset;
+		this.readingPos = readingPos;
 	}
 
 	static public function allocate():BinaryStream {
@@ -34,13 +34,13 @@ class BinaryStream {
 		this.buffer.add(value);
 	}
 
-	public function readBit(size:Int):Int {
-		this.offset += size;
-		return this.getBytes().get(this.offset - size);
+	public function readBit(offset:Int):Int {
+		this.readingPos += offset;
+		return this.getBytes().get(this.readingPos - offset);
 	}
 
 	public function eos():Bool {
-		return (this.offset > this.buffer.length) ? true : false;
+		return (this.readingPos > this.buffer.length) ? true : false;
 	}
 
 	public function rewind():Void {
