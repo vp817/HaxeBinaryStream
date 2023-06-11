@@ -123,7 +123,7 @@ class BinaryStream {
 	}
 
 	public function writeZigZag32(value:Int):Void {
-		this.writeVarInt((value << 1) ^ (value >> 32 - 1));
+		this.writeVarInt((value << 1) ^ (value >> 31));
 	}
 
 	public function readInt8(signed:Bool):Int {
@@ -199,6 +199,6 @@ class BinaryStream {
 
 	public function readZigZag32():Int {
 		var value:Int = this.readVarInt();
-		return (value >> 1) ^ (value << 32 - 1);
+		return (value >> 1) ^ -(value & 1);
 	}
 }
