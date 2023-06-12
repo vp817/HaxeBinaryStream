@@ -116,6 +116,7 @@ class BinaryStream {
 			value >>>= 7;
 			if (value == 0x00) {
 				this.writeInt8(toWrite, false);
+				break;
 			} else {
 				this.writeInt8(toWrite | 0x80, false);
 			}
