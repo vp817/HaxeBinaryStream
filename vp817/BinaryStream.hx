@@ -114,11 +114,11 @@ class BinaryStream {
 		for (i in 0...5) {
 			var toWrite = value & 0x7f;
 			value >>>= 7;
-			if (value == 0x00) {
+			if (value != 0x00) {
+				this.writeInt8(toWrite | 0x80 false);
+			} else {
 				this.writeInt8(toWrite, false);
 				break;
-			} else {
-				this.writeInt8(toWrite | 0x80, false);
 			}
 		}
 	}
