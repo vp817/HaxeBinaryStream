@@ -37,7 +37,7 @@ class BinaryStream {
 		this.buffer.add(value);
 	}
 
-	public function readBit(offset:Int):Int {
+	public function read(offset:Int):Int {
 		this.readingPos += offset;
 		return this.getBytes().get(this.readingPos - offset);
 	}
@@ -128,22 +128,22 @@ class BinaryStream {
 	}
 
 	public function readInt8(signed:Bool):Int {
-		return this.readBit(1) & (signed == true ? 0x7f : 0xff);
+		return this.read(1) & (signed == true ? 0x7f : 0xff);
 	}
 
 	public function readBool():Bool {
-		return this.readInt8(false) == 1 ? true : false;
+		return this.read(false) == 1 ? true : false;
 	}
 
 	public function readInt16(signed:Bool):Int {
 		var value:Int = 0;
 		var v:Int = signed == true ? 0x7fff : 0xffff;
 		if (this.isBigEndian) {
-			value |= (this.readBit(1) & v) << 8;
-			value |= this.readBit(1) & v;
+			value |= (this.read(1) & v) << 8;
+			value |= this.read(1) & v;
 		} else {
-			value |= this.readBit(1) & v;
-			value |= (this.readBit(1) & v) << 8;
+			value |= this.read(1) & v;
+			value |= (this.read(1) & v) << 8;
 		}
 		return value;
 	}
@@ -151,15 +151,15 @@ class BinaryStream {
 	public function readInt32():Int32 {
 		var value:Int32 = 0;
 		if (this.isBigEndian) {
-			value |= this.readBit(1) << 24;
-			value |= this.readBit(1) << 16;
-			value |= this.readBit(1) << 8;
-			value |= this.readBit(1);
+			value |= this.read(1) << 24;
+			value |= this.read(1) << 16;
+			value |= this.read(1) << 8;
+			value |= this.read(1);
 		} else {
-			value |= this.readBit(1);
-			value |= this.readBit(1) << 8;
-			value |= this.readBit(1) << 16;
-			value |= this.readBit(1) << 24;
+			value |= this.read(1);
+			value |= this.read(1) << 8;
+			value |= this.read(1) << 16;
+			value |= this.read(1) << 24;
 		}
 		return value;
 	}
@@ -170,10 +170,10 @@ class BinaryStream {
 
 	public function readFloat():Float {
 		var value:Int = 0;
-		value |= this.readBit(1) << 24;
-		value |= this.readBit(1) << 16;
-		value |= this.readBit(1) << 8;
-		value |= this.readBit(1);
+		value |= this.read(1) << 24;
+		value |= this.read(1) << 16;
+		value |= this.read(1) << 8;
+		value |= this.read(1);
 		return FPHelper.i32ToFloat(value);
 	}
 
