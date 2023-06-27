@@ -7,8 +7,8 @@ import haxe.io.Error;
 import haxe.io.BytesBuffer;
 import haxe.io.Bytes;
 
-var EndOfStreamReached:Error = Error.Overflow;
-var VarIntTooBig:Error = Error.Overflow;
+var EndOfStream:Error = Error.Overflow;
+var VarInTooBig:Error = Error.Overflow;
 
 class BinaryStream {
 	public var buffer:BytesBuffer;
@@ -31,7 +31,7 @@ class BinaryStream {
 
 	public function write(value:Bytes):Void {
 		if (value.length < 0 || this.buffer.length < 0 || this.eos()) {
-			throw EndOfStreamReached;
+			throw EndOfStream;
 		}
 
 		this.buffer.add(value);
@@ -108,9 +108,7 @@ class BinaryStream {
 		this.writeInt32(val.low);
 	}
 
-	public function writeVarInt(value:Int):Void {
-		value &= 0xffffffff;
-
+	public function writeVarInt(value:Int32):Void {
 		for (i in 0...5) {
 			var toWrite = value & 0x7f;
 			value >>>= 7;
@@ -123,8 +121,18 @@ class BinaryStream {
 		}
 	}
 
-	public function writeZigZag32(value:Int):Void {
+	public function writeVarLong(value:Int64):Void {
+		this.writeVarInt(value.high);
+		this.writeVarInt(value.low);
+	}
+
+	public function writeZigZag32(value:Int32):Void {
 		this.writeVarInt((value << 1) ^ (value >> 31));
+	}
+
+	public function writeZigZag64(value:Int64):Void {
+		this.writeZigZag32(value.high);
+		this.writeZigZag32(value.low);
 	}
 
 	public function readInt8(signed:Bool):Int {
@@ -182,8 +190,8 @@ class BinaryStream {
 		return FPHelper.i64ToDouble(value.low, value.high);
 	}
 
-	public function readVarInt():Int {
-		var value:Int = 0;
+	public function readVarInt():Int32 {
+		var value:Int32 = 0;
 		var i:Int = 0;
 		while (i < 35) {
 			var toRead:Int = this.readInt8(false);
@@ -193,13 +201,21 @@ class BinaryStream {
 			}
 
 			i += 7;
-		} // 0 7 14 21 28
+		}
 
 		throw VarIntTooBig;
 	}
 
-	public function readZigZag32():Int {
-		var value:Int = this.readVarInt();
+	public function readVarLong():Int64 {
+		return Int64.make(this.readVarInt(), this.readVarInt());
+	}
+
+	public function readZigZag32():Int32 {
+		var value:Int32 = this.readVarInt();
 		return (value >> 1) ^ -(value & 1);
+	}
+
+	public function readZigZag64():Int64 {
+		return Int64.make(this.readZigZag32(), this.readZigZag33());
 	}
 }
