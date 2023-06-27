@@ -93,16 +93,16 @@ class BinaryStream {
 		this.write(temp);
 	}
 
-	public function writeInt64(value:Int64) {
+	public function writeInt64(value:Int64):Void {
 		this.writeInt32(value.high);
 		this.writeInt32(value.low);
 	}
 
-	public function writeFloat(value:Float) {
+	public function writeFloat(value:Float):Void {
 		this.writeInt32(FPHelper.floatToI32(value));
 	}
 
-	public function writeDouble(value:Float) {
+	public function writeDouble(value:Float):Void {
 		var val: Int64 = FPHelper.doubleToI64(value);
 		this.writeInt32(val.high);
 		this.writeInt32(val.low);
