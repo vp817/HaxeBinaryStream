@@ -15,7 +15,7 @@ class BinaryStream {
 	public var readingPos:Int;
 	public var isBigEndian:Bool;
 
-	static var ByteShiftMapTable:Map<Int, Map<Int, Array<Int>>> = [
+	static var BitShiftMapTable:Map<Int, Map<Int, Array<Int>>> = [
 		16 => [0 => [8, 0], 1 => [0, 8]],
 		24 => [0 => [16, 8, 0], 1 => [0, 8, 16]],
 		32 => [0 => [24, 16, 8, 0], 1 => [0, 8, 16, 24]]
@@ -56,7 +56,7 @@ class BinaryStream {
 	}
 
 	static public function writeValueIntoBytes(bytes:Bytes, bitSize:Int, bigEndian:Bool, value:Int):Void {
-		var shiftMap:Map<Int, Array<Int>> = BinaryStream.ByteShiftMapTable[bitSize];
+		var shiftMap:Map<Int, Array<Int>> = BinaryStream.BitShiftMapTable[bitSize];
 		var byteArray:Array<Int> = bigEndian ? shiftMap[0] : shiftMap[1];
 		var i:Int = 0;
 		for (v in byteArray) {
@@ -66,7 +66,7 @@ class BinaryStream {
 	}
 
 	static public function readValueFromBytes(bytes:Bytes, bitSize:Int, bigEndian:Bool):Int {
-		var shiftMap:Map<Int, Array<Int>> = BinaryStream.ByteShiftMapTable[bitSize];
+		var shiftMap:Map<Int, Array<Int>> = BinaryStream.BitShiftMapTable[bitSize];
 		var byteArray:Array<Int> = bigEndian ? shiftMap[0] : shiftMap[1];
 		var value:Int = 0;
 		var i:Int = 0;
