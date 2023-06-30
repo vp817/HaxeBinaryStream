@@ -116,7 +116,7 @@ class BinaryStream {
 		this.readingPos = 0;
 	}
 
-	public function swapEndainness():Void {
+	public function swapEndian():Void {
 		this.isBigEndian = this.isBigEndian == true ? false : true;
 	}
 
