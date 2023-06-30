@@ -89,9 +89,7 @@ class BinaryStream {
 	}
 
 	public function write(value:Bytes):Void {
-		if (this.eos()) {
-			throw EndOfStream;
-		}
+		if (this.eos()) throw EndOfStream;
 
 		var bytesSize:Int = value.length;
 		this.buffer.blit(this.writingPos, value, 0, bytesSize);
