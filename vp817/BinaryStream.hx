@@ -138,6 +138,13 @@ class BinaryStream {
 		this.write(temp);
 	}
 
+	public function writeInt24(value:Int, signed:Bool):Void {
+		var temp:Bytes = Bytes.alloc(3);
+		value = BinaryStream.limit(value, 24, signed);
+		BinaryStream.writeValueIntoBytes(temp, 24, this.isBigEndian, value);
+		this.write(temp);
+	}
+
 	public function writeInt32(value:Int32, signed:Bool):Void {
 		var temp:Bytes = Bytes.alloc(4);
 		value = BinaryStream.limit(value, 32, signed);
@@ -200,6 +207,12 @@ class BinaryStream {
 	public function readInt16(signed:Bool):Int {
 		var value:Int = BinaryStream.readValueFromBytes(this.read(2), 16, this.isBigEndian);
 		value = BinaryStream.limit(value, 16, signed);
+		return value;
+	}
+
+	public function readInt24(signed:Bool):Int {
+		var value:Int = BinaryStream.readValueFromBytes(this.read(3), 24, this.isBigEndian);
+		value = BinaryStream.limit(value, 24, signed);
 		return value;
 	}
 
