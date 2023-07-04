@@ -102,7 +102,7 @@ class BinaryStream {
 	}
 
 	public function eos():Bool {
-		return (this.readingPos > this.buffer.length) ? true : false;
+		return this.readingPos >= this.buffer.length;
 	}
 
 	public function rewind():Void {
