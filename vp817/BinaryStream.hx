@@ -98,7 +98,7 @@ class BinaryStream {
 
 	public function read(size:Int):Bytes {
 		this.readingPos += size;
-		return this.buffer.sub(this.readingPos - size, this.readingPos);
+		return this.buffer.sub(this.readingPos - size, size);
 	}
 
 	public function eos():Bool {
