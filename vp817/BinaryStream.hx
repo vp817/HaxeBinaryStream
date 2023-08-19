@@ -117,7 +117,7 @@ class BinaryStream {
 	}
 
 	public function swapEndian():Void {
-		this.isBigEndian = this.isBigEndian == true ? false : true;
+		this.isBigEndian = !this.isBigEndian;
 	}
 
 	public function writeInt8(value:Int, signed:Bool):Void {
