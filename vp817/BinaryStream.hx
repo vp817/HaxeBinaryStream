@@ -24,7 +24,7 @@ class BinaryStream {
 	static var LimitsTable:Map<Int, Map<Int, Array<Int>>> = [
 		8 => [0 => [0x00, 0xff], 1 => [-(0x80), 0x7f]],
 		16 => [0 => [0x00, 0xffff], 1 => [-(0x8000), 0x7fff]],
-		24 => [0 => [0x00, 0x00ffffff], 1 => [-(0x800000), 0x7fffff]],
+		24 => [0 => [0x00, 0xffffff], 1 => [-(0x800000), 0x7fffff]],
 		32 => [0 => [0x00, 0xffffffff], 1 => [-(0x80000000), 0x7fffffff]]
 	];
 
