@@ -46,11 +46,6 @@ class BinaryStream {
 			}
 		} else {
 			retValue = BinaryStream.signInt(bitSize, retValue);
-			if (retValue < limitTable[1][0]) {
-				retValue = limitTable[1][0];
-			} else if (retValue > limitTable[1][1]) {
-				retValue &= limitTable[1][1];
-			}
 		}
 		return retValue;
 	}
